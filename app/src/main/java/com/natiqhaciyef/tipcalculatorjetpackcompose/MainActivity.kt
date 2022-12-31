@@ -45,17 +45,17 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Screen() {
-    var inputBill = remember { mutableStateOf("0.0") }
     val splitBy = remember { mutableStateOf(1) }
+    val totalPerPersonState = remember {
+        mutableStateOf(0.0)
+    }
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colors.background
     ) {
         Column {
-            TopHeader(data = inputBill.value)
-            Body(input = inputBill, splitBy) {
-                inputBill.value = it
-            }
+            TopHeader(data = totalPerPersonState.value.toString())
+            Body(splitBy, totalPerPersonState)
         }
     }
 }
@@ -105,11 +105,14 @@ fun TopHeader(data: String = "0") {
 //@Preview
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun Body(input: MutableState<String>, splitBy: MutableState<Int>, function: (String) -> Unit) {
+fun Body(splitBy: MutableState<Int>,
+         totalPerPersonState: MutableState<Double>) {
+    val input = remember { mutableStateOf("0.0") }
+
     val sliderPositionState = remember {
         mutableStateOf(0.0f)
     }
-    val tipPercentage = (sliderPositionState.value * 100).toInt()
+    val tipPercentage = calculatetipPercentage(sliderPositionState)
 
     val validState = remember(input) {
         input.value.trim().isNotEmpty()
@@ -140,12 +143,18 @@ fun Body(input: MutableState<String>, splitBy: MutableState<Int>, function: (Str
                         if (!validState) return@KeyboardActions
                         keyboardController?.hide()
                     },
-                    function = function
+                    function = {
+                        input.value = it
+                    }
                 )
                 if (validState) {
                     BodySplitPart(input, splitBy)
-                    BodyTipPart(input.value, tipPercentage)
-                    BodySeekBarPart(tipPercentage = tipPercentage,sliderPositionState = sliderPositionState)
+                    BodyTipPart(input, tipPercentage)
+                    BodySeekBarPart(tipPercentage = tipPercentage,
+                        sliderPositionState = sliderPositionState,
+                    splitBy = splitBy.value,
+                        input = input,
+                        totalPerPersonState = totalPerPersonState)
                 } else
                     Box {}
 

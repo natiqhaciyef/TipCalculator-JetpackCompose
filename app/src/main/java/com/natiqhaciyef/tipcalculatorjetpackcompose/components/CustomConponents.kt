@@ -22,6 +22,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.natiqhaciyef.tipcalculatorjetpackcompose.calculatePerPerson
+import com.natiqhaciyef.tipcalculatorjetpackcompose.calculateTip
 import com.natiqhaciyef.tipcalculatorjetpackcompose.widgets.RoundIconButton
 
 @Composable
@@ -153,11 +155,12 @@ fun BodySplitPart(input: MutableState<String>, splitBy: MutableState<Int>) {
 
 
 @Composable
-fun BodyTipPart(value: String, tipPercentage: Int) {
-    var tip = "0"
+fun BodyTipPart(input: MutableState<String>, tipPercentage: Int) {
+    var tip = "0.0"
     try {
-        tip = "%.2f".format((value.toDouble() * tipPercentage / 100))
-    }catch (e:Exception){}
+        tip = "%.2f".format(calculateTip(input.value.toDouble(), tipPercentage))
+    } catch (e: Exception) {
+    }
 
     Row(
         modifier = Modifier
@@ -186,7 +189,13 @@ fun BodyTipPart(value: String, tipPercentage: Int) {
 }
 
 @Composable
-fun BodySeekBarPart(tipPercentage: Int, sliderPositionState: MutableState<Float>) {
+fun BodySeekBarPart(
+    splitBy: Int,
+    input: MutableState<String>,
+    totalPerPersonState: MutableState<Double>,
+    tipPercentage: Int,
+    sliderPositionState: MutableState<Float>
+) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -205,6 +214,8 @@ fun BodySeekBarPart(tipPercentage: Int, sliderPositionState: MutableState<Float>
             value = sliderPositionState.value,
             onValueChange = { newVal ->
                 sliderPositionState.value = newVal
+                totalPerPersonState.value =
+                    calculatePerPerson(input.value.toDouble(), tipPercentage, splitBy)
             },
             steps = 100
         )
