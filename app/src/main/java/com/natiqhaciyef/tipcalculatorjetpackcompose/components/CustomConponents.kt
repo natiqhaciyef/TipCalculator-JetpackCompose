@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.rounded.AttachMoney
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -62,9 +63,11 @@ fun CustomTextBill(
 
 
 @Composable
-fun CustomTextField(value: String,
-                    onAction: KeyboardActions = KeyboardActions.Default,
-                    function: (String) -> Unit = { }) {
+fun CustomTextField(
+    value: String,
+    onAction: KeyboardActions = KeyboardActions.Default,
+    function: (String) -> Unit = { }
+) {
     OutlinedTextField(
         modifier = Modifier
             .fillMaxWidth()
@@ -78,7 +81,7 @@ fun CustomTextField(value: String,
         ),
         label = { Text(text = "Enter Bill") },
         placeholder = { Text(text = "0.00") },
-        keyboardActions = onAction ,
+        keyboardActions = onAction,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number,
             imeAction = ImeAction.Next
@@ -95,7 +98,7 @@ fun CustomTextField(value: String,
 
 
 @Composable
-fun BodySplitPart() {
+fun BodySplitPart(input: MutableState<String>, splitBy: MutableState<Int>) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -118,20 +121,31 @@ fun BodySplitPart() {
         ) {
             RoundIconButton(
                 imageVector = Icons.Default.Remove,
-                clickEvent = { }
+                clickEvent = {
+                    try {
+                        if (splitBy.value > 1)
+                            splitBy.value -= 1
+
+                        input.value = "${input.value.toInt() / splitBy.value}"
+                    } catch (e: Exception) {
+                    }
+                }
             )
 
             Text(
                 modifier = Modifier
                     .padding(horizontal = 20.dp, vertical = 10.dp)
                     .align(Alignment.CenterVertically),
-                text = "0"
+                text = "${splitBy.value}"
             )
 
             RoundIconButton(
                 modifier = Modifier,
                 imageVector = Icons.Default.Add,
-                clickEvent = { }
+                clickEvent = {
+                    if (splitBy.value < 100)
+                        splitBy.value += 1
+                }
             )
         }
     }
@@ -139,7 +153,12 @@ fun BodySplitPart() {
 
 
 @Composable
-fun BodyTipPart() {
+fun BodyTipPart(value: String, tipPercentage: Int) {
+    var tip = "0"
+    try {
+        tip = "%.2f".format((value.toDouble() * tipPercentage / 100))
+    }catch (e:Exception){}
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -159,10 +178,35 @@ fun BodyTipPart() {
             modifier = Modifier
                 .align(Alignment.CenterVertically)
                 .padding(start = 10.dp),
-            text = "$33.00",
+            text = "$$tip",
             fontWeight = FontWeight.Normal,
             fontSize = 18.sp
         )
     }
 }
 
+@Composable
+fun BodySeekBarPart(tipPercentage: Int, sliderPositionState: MutableState<Float>) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "$tipPercentage%",
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            modifier = Modifier.padding(top = 10.dp)
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Slider(
+            modifier = Modifier.padding(horizontal = 15.dp),
+            value = sliderPositionState.value,
+            onValueChange = { newVal ->
+                sliderPositionState.value = newVal
+            },
+            steps = 100
+        )
+    }
+}

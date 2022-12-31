@@ -46,13 +46,16 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Screen() {
     var inputBill = remember { mutableStateOf("0.0") }
+    val splitBy = remember { mutableStateOf(1) }
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colors.background
     ) {
         Column {
             TopHeader(data = inputBill.value)
-            Body(input = inputBill.value) { inputBill.value = it }
+            Body(input = inputBill, splitBy) {
+                inputBill.value = it
+            }
         }
     }
 }
@@ -102,12 +105,14 @@ fun TopHeader(data: String = "0") {
 //@Preview
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun Body(input: String, function: (String) -> Unit) {
+fun Body(input: MutableState<String>, splitBy: MutableState<Int>, function: (String) -> Unit) {
     val sliderPositionState = remember {
         mutableStateOf(0.0f)
     }
+    val tipPercentage = (sliderPositionState.value * 100).toInt()
+
     val validState = remember(input) {
-        input.trim().isNotEmpty()
+        input.value.trim().isNotEmpty()
     }
 
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -130,7 +135,7 @@ fun Body(input: String, function: (String) -> Unit) {
                 horizontalAlignment = Alignment.Start
             ) {
                 CustomTextField(
-                    value = input,
+                    value = input.value,
                     onAction = KeyboardActions {
                         if (!validState) return@KeyboardActions
                         keyboardController?.hide()
@@ -138,39 +143,15 @@ fun Body(input: String, function: (String) -> Unit) {
                     function = function
                 )
                 if (validState) {
-                    BodySplitPart()
-                    BodyTipPart()
-                    BodySeekBarPart(sliderPositionState = sliderPositionState)
-                } else {
+                    BodySplitPart(input, splitBy)
+                    BodyTipPart(input.value, tipPercentage)
+                    BodySeekBarPart(tipPercentage = tipPercentage,sliderPositionState = sliderPositionState)
+                } else
                     Box {}
-                }
+
 
             }
         }
-    }
-}
-
-
-@Composable
-fun BodySeekBarPart(sliderPositionState: MutableState<Float>) {
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "33 %",
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp,
-            modifier = Modifier.padding(top = 10.dp)
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Slider(modifier = Modifier.padding(horizontal = 10.dp ),
-            value = sliderPositionState.value,
-            onValueChange = { newVal ->
-                sliderPositionState.value = newVal
-            })
     }
 }
 
